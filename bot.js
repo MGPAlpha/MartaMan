@@ -67,8 +67,10 @@ function update() {
 					// Make sure the mention isn't own tweet
 					if (element.user.id_str != myId) {
 						// Post a reply tweet, with the same text minus the last character
+						var status = '\u25b8' + element.text.replace(/@[\w\d_]* ?/g, "") + '\u25c2';
+						console.log(status);
 						T.post('statuses/update', {
-							status: element.text.substring(0, element.text.length - 1),
+							status: status,
 							in_reply_to_status_id: element.id_str,
 							auto_populate_reply_metadata: true
 						}, (error, response) => {
