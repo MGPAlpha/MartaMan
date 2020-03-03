@@ -4,38 +4,92 @@ var Twit = require('twit');
 // We need to include our configuration file
 var T = new Twit(require('./config.js'));
 
-// This is the URL of a search for the latest tweets on the '#mediaarts' hashtag.
-var mediaArtsSearch = {q: "#mediaarts", count: 10, result_type: "recent"}; 
+// Remembers the id of MartaMan's user to make sure it doesn't reply to itself over and over
+var myId;
 
-// This function finds the latest tweet with the #mediaarts hashtag, and retweets it.
-function retweetLatest() {
-	T.get('search/tweets', mediaArtsSearch, function (error, data) {
-	  // log out any errors and responses
-	  console.log(error, data);
-	  // If our search request to the server had no errors...
-	  if (!error) {
-	  	// ...then we grab the ID of the tweet we want to retweet...
-		var retweetId = data.statuses[0].id_str;
-		// ...and then we tell Twitter we want to retweet it!
-		T.post('statuses/retweet/' + retweetId, { }, function (error, response) {
-			if (response) {
-				console.log('Success! Check your bot, it should have retweeted something.')
-			}
-			// If there was an error with our Twitter call, we print it out here.
-			if (error) {
-				console.log('There was an error with Twitter:', error);
-			}
-		})
-	  }
-	  // However, if our original search request had an error, we want to print it out here.
-	  else {
-	  	console.log('There was an error with your hashtag search:', error);
-	  }
+// Used to make sure two updates can't be called simultaneously
+var occupied = false;
+
+// Used to get just new mentions
+var lastSeenMention;
+
+function init() {
+	occupied = true;
+
+	// Gets and stores MartaMan's user id
+	T.get('account/verify_credentials', (error, response) => {
+		if (!error) {
+			myId = response.id_str;
+			console.log("My user id is " + myId);
+		} else {
+			console.log(error);
+			process.exit();
+		}
+		completedInitTask();
+	});
+
+	// Gets and stores most recent mention id at init time
+	T.get('statuses/mentions_timeline', {count: 1}, (error, data) => {
+		if (!error) {
+			lastSeenMention = data[0].id_str;
+			console.log("Newest mention is id " + lastSeenMention);
+		} else {
+			console.log(error);
+			process.exit();
+		}
+		completedInitTask();
 	});
 }
 
-// Try to retweet something as soon as we run the program...
-retweetLatest();
-// ...and then every hour after that. Time here is in milliseconds, so
-// 1000 ms = 1 second, 1 sec * 60 = 1 min, 1 min * 60 = 1 hour --> 1000 * 60 * 60
-setInterval(retweetLatest, 1000 * 60 * 60);
+// Tracks when all init processes have finished
+var initTasksCompleted = 0
+var numInitTasks = 2;
+
+function completedInitTask() {
+	initTasksCompleted++;
+	if (initTasksCompleted >= numInitTasks) {
+		console.log("Initialized Bot");
+		occupied = false;
+		// Sets update to run every 15 seconds
+		setInterval(update, 15000);
+	}
+}
+
+function update() {
+	// Make sure another update isn't already being run
+	if (!occupied) {
+		occupied = true;
+		// Get all new mentions
+		T.get('statuses/mentions_timeline', {since_id: lastSeenMention}, (error, data) => {
+			if (!error) {
+				// Loop through the list of new mentions
+				data.forEach(element => {
+					// Make sure the mention isn't own tweet
+					if (element.user.id_str != myId) {
+						// Post a reply tweet, with the same text minus the last character
+						T.post('statuses/update', {
+							status: element.text.substring(0, element.text.length - 1),
+							in_reply_to_status_id: element.id_str,
+							auto_populate_reply_metadata: true
+						}, (error, response) => {
+							if (error) {
+								console.log("Error occurred in replying");
+								console.log(error);
+							}
+						});
+					}
+				});
+				// Update the last seen mention
+				if (data.length != 0) {
+					lastSeenMention = data[0].id_str;
+				}
+			} else {
+				console.log(error);
+			}
+			occupied = false;
+		});
+	}
+}
+
+// Start the bot
+init();
