@@ -96,7 +96,7 @@ class Game {
 			throw "Cannot parse " + letter + " as a letter";
 		}
 		if (!letter.match(/\W/ig) != 1) return true;
-		
+
 		// Check if the letter is true in the map
 		else return this.letters.get(letter.toLowerCase());
 	}
@@ -114,11 +114,11 @@ class Game {
 		} else {
 			// Mark the letter as guessed
 			this.letters.set(letter.toLowerCase(), true);
-			
+
 			// If guess is in the phrase
 			if (this.phrase.toLowerCase().includes(letter.toLowerCase())) {
 				this._lastGuessResult = 1;
-				
+
 				// Check if guess makes player win
 				var won = true;
 				for (var i = 0; i < this.phrase.length; i++) {
@@ -127,12 +127,12 @@ class Game {
 				if (won) {
 					this._lastGuessResult = 2;
 				}
-			} 
+			}
 			// If guess not in the phrase
 			else {
 				this._lastGuessResult = 0;
 				this._wrongGuesses++;
-				
+
 				// Check if guess makes player lose
 				if (this.wrongGuesses >= hangmanArt.length - 1) {
 					this._lastGuessResult = -3;
@@ -248,14 +248,14 @@ function update() {
 		// Get all new mentions
 		T.get('statuses/mentions_timeline', {since_id: lastSeenMention}, (error, data) => {
 			if (!error) {
-				
+
 				// Loop through the list of new mentions
 				data.forEach(element => {
 					let userId = element.user.id_str;
 					let repliedTo = [];
 					// Make sure the mention isn't own tweet
 					if (userId != myId && !repliedTo.includes(userId)) {
-						
+
 						var currGame;
 
 						if (!games.has(userId)) {
@@ -267,40 +267,40 @@ function update() {
 							currGame = games.get(userId);
 							currGame.guess(element.text.replace(/@\w* */ig, "").trim().charAt(0));
 						}
-												
+
 						var outputLines = [];
 
 						// Make first statement based on previous guess
 						switch(currGame.lastGuessResult) {
 							case undefined:
-								outputLines.push("Hi, I'm Marta Man! Come play hangman with me!");
+								outputLines.push("Y OU HAVE SUMMONED MARTA MAN., COMMENCE GAME");
 								break;
 							case -3:
-								outputLines.push("Game over");
+								outputLines.push("GAME OVER,.");
 								break;
 							case -2:
-								outputLines.push("I couldn't understand your guess. Please try again");
+								outputLines.push("I CAN'T UNDERSTAND YOUR GUESS. TRY! AGAIN!");
 								break;
 							case -1:
-								outputLines.push("You already made that guess! Please try again");
+								outputLines.push("Y OU ALREADY MADE THAT GUESS! TRY! AGAIN!");
 								break;
 							case 0:
-								outputLines.push("Sorry, but that guess was wrong");
+								outputLines.push("INCORRECT. I SUF FER.");
 								break;
 							case 1:
-								outputLines.push("Good guess!");
+								outputLines.push("CORRECT. MY STRENGTH GROWS,.");
 								break;
 							case 2:
-								outputLines.push("You win!");
+								outputLines.push("A JUSTICE HAS BEEN DONE THIS DAY.,.");
 								break;
 						}
 
 						// Display used letters
 						outputLines.push(`Used letters: ${currGame.writeUsedLetters()}`);
-						
+
 						// Display current hangman
 						outputLines.push(hangmanArt[currGame.wrongGuesses]);
-						
+
 						// Display phrase, with underscores replacing unguessed letters
 						outputLines.push(currGame.writePhrase());
 
@@ -323,7 +323,7 @@ function update() {
 								console.log(error);
 							}
 						});
-						
+
 						// Mark user as already replied to on this update
 						repliedTo.push(userId);
 
