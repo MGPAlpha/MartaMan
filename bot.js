@@ -5,8 +5,15 @@ var Twit = require('twit');
 var T = new Twit(require('./config.js'));
 
 var phrases = [
-	//TODO replace these with hangman phrases
-	"Phrases go here"
+	"TRAFFIC SUX",
+	"VOTE MARTA",
+	"FREE ME",
+	"VIVA LA MARTA",
+	"SEND FUNDING",
+	"NO MO ROADS",
+	"BURN THE INTERSTATE",
+	"BUMPER 2 BUMPER",
+	"stop driving, clown"
 ];
 
 var hangmanArt = [
