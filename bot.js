@@ -10,11 +10,62 @@ var phrases = [
 ];
 
 var hangmanArt = [
-	"",
-	"",
-	"",
-	"",
-	""
+`．．＿＿＿＿．
+．｜．．．．｜
+．．．．．．｜
+．．．．．．｜
+．．．．．．｜
+．．．．．．｜
+＝＝＝＝＝＝＝`,
+`．．＿＿＿＿．
+．｜．．．．｜
+．Ｏ．．．．｜
+．．．．．．｜
+．．．．．．｜
+．．．．．．｜
+＝＝＝＝＝＝＝`,
+`．．＿＿＿＿．
+．｜．．．．｜
+．Ｏ．．．．｜
+．｜．．．．｜
+．．．．．．｜
+．．．．．．｜
+＝＝＝＝＝＝＝`,
+`．．＿＿＿＿．
+．｜．．．．｜
+．Ｏ．．．．｜
+＜｜．．．．｜
+．．．．．．｜
+．．．．．．｜
+＝＝＝＝＝＝＝`,
+`．．＿＿＿＿．
+．｜．．．．｜
+．Ｏ．．．．｜
+＜｜＞．．．｜
+．．．．．．｜
+．．．．．．｜
+＝＝＝＝＝＝＝`,
+`．．＿＿＿＿．
+．｜．．．．｜
+．Ｏ．．．．｜
+＜｜＞．．．｜
+．｜．．．．｜
+．．．．．．｜
+＝＝＝＝＝＝＝`,
+`．．＿＿＿＿．
+．｜．．．．｜
+．Ｏ．．．．｜
+＜｜＞．．．｜
+．｜．．．．｜
+｜．．．．．｜
+＝＝＝＝＝＝＝`,
+`．．＿＿＿＿．
+．｜．．．．｜
+．Ｏ．．．．｜
+＜｜＞．．．｜
+．｜．．．．｜
+｜．｜．．．｜
+＝＝＝＝＝＝＝`
 ];
 
 class Game {
@@ -29,47 +80,95 @@ class Game {
 		this._wrongGuesses = 0;
 
 		// Meaning:
+		// -3: Game over
 		// -2: Guess could not be parsed
 		// -1: Letter was already guessed
 		// 0: Incorrect guess
 		// 1: Correct guess
+		// 2: Game won
 		// undefined: no previous guess
 		this._lastGuessResult = undefined;
-		
-		// For the win state, 0 represents a game still running, -1 is lost, and 1 is won
-		this._winState = 0;
 	}
 
+	// Checks if letter has been guessed, or true if not a letter character
 	letterGuessed(letter) {
 		if (letter.length != 1) {
 			throw "Cannot parse " + letter + " as a letter";
 		}
-		if (letter.match(/\W/g) != 1) return true;
-		else return this.letters.get(letter);
+		if (!letter.match(/\W/ig) != 1) return true;
+		
+		// Check if the letter is true in the map
+		else return this.letters.get(letter.toLowerCase());
 	}
 
+	// Processes the player's guess
 	guess(letter) {
-		if (letter.length != 1 || !letter.match(/\w/)) {
-			throw "Cannot guess " + letter + "";
+		// Make sure can read the letter
+		if (letter.length != 1 || !letter.match(/\w/ig)) {
 			this._lastGuessResult = -2;
 		}
+
+		// Make sure letter has not already been guessed
 		if (this.letters.get(letter.toLowerCase())) {
 			this._lastGuessResult = -1;
 		} else {
+			// Mark the letter as guessed
 			this.letters.set(letter.toLowerCase(), true);
-			if (this.phrase.includes(letter)) {
+			
+			// If guess is in the phrase
+			if (this.phrase.toLowerCase().includes(letter.toLowerCase())) {
 				this._lastGuessResult = 1;
+				
+				// Check if guess makes player win
+				var won = true;
 				for (var i = 0; i < this.phrase.length; i++) {
-					
+					if (!this.letterGuessed(this.phrase.charAt(i))) won = false;
 				}
-			} else {
+				if (won) {
+					this._lastGuessResult = 2;
+				}
+			} 
+			// If guess not in the phrase
+			else {
 				this._lastGuessResult = 0;
 				this._wrongGuesses++;
-				if (this.wrongGuesses >= hangmanArt.length) {
-					this._winState = -1;
+				
+				// Check if guess makes player lose
+				if (this.wrongGuesses >= hangmanArt.length - 1) {
+					this._lastGuessResult = -3;
 				}
 			}
 		}
+	}
+
+	// Returns a spaced string of all un-guessed letters
+	writeAvailableLetters() {
+		var available = [];
+		for (var i = 10; i < 36; i++) {
+			var letter = i.toString(36);
+			if (!this.letters.get(letter)) available.push(letter);
+		}
+		return available.join(" ");
+	}
+
+	// Returns a spaced string of all un-guessed letters
+	writeUsedLetters() {
+		var used = [];
+		for (var i = 10; i < 36; i++) {
+			var letter = i.toString(36);
+			if (this.letters.get(letter)) used.push(letter);
+		}
+		return used.join(" ");
+	}
+
+	// Writes the phrase, with unguessed letters replaced by '_'
+	writePhrase() {
+		var outArray = [];
+		for (var i = 0; i < this.phrase.length; i++) {
+			var letter = this.phrase.charAt(i);
+			outArray.push(this.letterGuessed(letter) ? letter : "_");
+		}
+		return outArray.join(" ");
 	}
 
 	get letters() {
@@ -86,10 +185,6 @@ class Game {
 
 	get lastGuessResult() {
 		return this._lastGuessResult
-	}
-
-	get winState() {
-		return this._winState;
 	}
 }
 
@@ -161,26 +256,75 @@ function update() {
 					// Make sure the mention isn't own tweet
 					if (userId != myId && !repliedTo.includes(userId)) {
 						
+						var currGame;
+
 						if (!games.has(userId)) {
-							// Post a reply tweet, with the same text
-							var status = '\u25b8' + element.text.replace(/@[\w\d_]* ?/g, "") + '\u25c2';
-							console.log(status);
-							T.post('statuses/update', {
-								status: status,
-								in_reply_to_status_id: element.id_str,
-								auto_populate_reply_metadata: true
-							}, (error, response) => {
-								if (error) {
-									console.log("Error occurred in replying");
-									console.log(error);
-								} else {
-									games.set(userId, new Game());
-								}
-							});
+							// Create game for new user
+							currGame = new Game();
+							games.set(userId, currGame);
 						} else {
-							console.log(games.get(userId));
+							// Otherwise process their guess
+							currGame = games.get(userId);
+							currGame.guess(element.text.replace(/@\w* */ig, "").trim().charAt(0));
 						}
+												
+						var outputLines = [];
+
+						// Make first statement based on previous guess
+						switch(currGame.lastGuessResult) {
+							case undefined:
+								outputLines.push("Hi, I'm Marta Man! Come play hangman with me!");
+								break;
+							case -3:
+								outputLines.push("Game over");
+								break;
+							case -2:
+								outputLines.push("I couldn't understand your guess. Please try again");
+								break;
+							case -1:
+								outputLines.push("You already made that guess! Please try again");
+								break;
+							case 0:
+								outputLines.push("Sorry, but that guess was wrong");
+								break;
+							case 1:
+								outputLines.push("Good guess!");
+								break;
+							case 2:
+								outputLines.push("You win!");
+								break;
+						}
+
+						// Display used letters
+						outputLines.push(`Used letters: ${currGame.writeUsedLetters()}`);
 						
+						// Display current hangman
+						outputLines.push(hangmanArt[currGame.wrongGuesses]);
+						
+						// Display phrase, with underscores replacing unguessed letters
+						outputLines.push(currGame.writePhrase());
+
+						// If game is over, delete the game
+						if (currGame.lastGuessResult == -3 || currGame.lastGuessResult == 2) {
+							games.delete(userId);
+						}
+
+						// Put all the output together with newlines
+						var status = outputLines.join("\n").toUpperCase();
+
+						// Post the game as a reply
+						T.post('statuses/update', {
+							status: status,
+							in_reply_to_status_id: element.id_str,
+							auto_populate_reply_metadata: true
+						}, (error, response) => {
+							if (error) {
+								console.log("Error occurred in replying");
+								console.log(error);
+							}
+						});
+						
+						// Mark user as already replied to on this update
 						repliedTo.push(userId);
 
 					}
