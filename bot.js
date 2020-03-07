@@ -106,11 +106,13 @@ class Game {
 		// Make sure can read the letter
 		if (letter.length != 1 || !letter.match(/\w/ig)) {
 			this._lastGuessResult = -2;
+			return;
 		}
 
 		// Make sure letter has not already been guessed
 		if (this.letters.get(letter.toLowerCase())) {
 			this._lastGuessResult = -1;
+			return;
 		} else {
 			// Mark the letter as guessed
 			this.letters.set(letter.toLowerCase(), true);
