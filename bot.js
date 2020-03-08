@@ -82,7 +82,8 @@ class Game {
 			this._letters.set(i.toString(36), false);
 		}
 
-		this._phrase = phrases[Math.floor(Math.random() * phrases.length)];
+		// this._phrase = phrases[Math.floor(Math.random() * phrases.length)];
+		this._phrase = phrases[8];
 
 		this._wrongGuesses = 0;
 
@@ -102,7 +103,7 @@ class Game {
 		if (letter.length != 1) {
 			throw "Cannot parse " + letter + " as a letter";
 		}
-		if (!letter.match(/\W/ig) != 1) return true;
+		if (!letter.match(/[a-z]/ig)) return true;
 
 		// Check if the letter is true in the map
 		else return this.letters.get(letter.toLowerCase());
@@ -111,7 +112,7 @@ class Game {
 	// Processes the player's guess
 	guess(letter) {
 		// Make sure can read the letter
-		if (letter.length != 1 || !letter.match(/\w/ig)) {
+		if (letter.length != 1 || !letter.match(/[a-z]/ig)) {
 			this._lastGuessResult = -2;
 			return;
 		}
@@ -285,7 +286,7 @@ function update() {
 								outputLines.push("Y OU HAVE SUMMONED MARTA MAN., COMMENCE GAME");
 								break;
 							case -3:
-								outputLines.push("GAME OVER,.");
+								outputLines.push(`GAME OVER,.\nThe correct answer was "${currGame.phrase}"`);
 								break;
 							case -2:
 								outputLines.push("I CAN'T UNDERSTAND YOUR GUESS. TRY! AGAIN!");
