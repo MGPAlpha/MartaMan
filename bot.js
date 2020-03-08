@@ -82,8 +82,7 @@ class Game {
 			this._letters.set(i.toString(36), false);
 		}
 
-		// this._phrase = phrases[Math.floor(Math.random() * phrases.length)];
-		this._phrase = phrases[8];
+		this._phrase = phrases[Math.floor(Math.random() * phrases.length)];
 
 		this._wrongGuesses = 0;
 
